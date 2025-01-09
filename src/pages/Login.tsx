@@ -1,25 +1,36 @@
+// React와 라우팅 관련 훅
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+// UI 컴포넌트들
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// 토스트 알림을 위한 커스텀 훅
 import { useToast } from "@/hooks/use-toast";
+// Supabase 클라이언트
 import { supabase } from "@/integrations/supabase/client";
 
+// 로그인 페이지 컴포넌트
 const Login = () => {
+  // 폼 입력값 상태 관리
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // 페이지 이동을 위한 네비게이션 훅
   const navigate = useNavigate();
+  // 토스트 알림 훅
   const { toast } = useToast();
 
+  // 로그인 폼 제출 핸들러
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Supabase 인증 API를 사용하여 로그인 시도
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      // 로그인 실패 시 에러 메시지 표시
       if (error) {
         toast({
           title: "로그인 실패",
@@ -29,6 +40,7 @@ const Login = () => {
         return;
       }
 
+      // 로그인 성공 시 메인 페이지로 이동
       if (data.user) {
         toast({
           title: "로그인 성공",
@@ -47,7 +59,9 @@ const Login = () => {
   };
 
   return (
+    // 전체 페이지를 차지하는 컨테이너
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 p-4">
+      {/* 로그인 카드 컴포넌트 */}
       <Card className="w-full max-w-md bg-gray-800 border-gray-700">
         <CardHeader>
           <CardTitle className="text-2xl text-center text-white">
@@ -55,7 +69,9 @@ const Login = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* 로그인 폼 */}
           <form onSubmit={handleLogin} className="space-y-4">
+            {/* 이메일 입력 필드 */}
             <div>
               <Input
                 type="email"
@@ -65,6 +81,7 @@ const Login = () => {
                 className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
+            {/* 비밀번호 입력 필드 */}
             <div>
               <Input
                 type="password"
@@ -74,9 +91,11 @@ const Login = () => {
                 className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
+            {/* 로그인 버튼 */}
             <Button type="submit" className="w-full">
               로그인
             </Button>
+            {/* 회원가입 링크 */}
             <div className="text-center text-gray-400">
               <button
                 type="button"
