@@ -6,52 +6,75 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
-      "ai Daily": {
+      posts: {
         Row: {
-          created_at: string
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          id?: number
-        }
-        Relationships: []
-      }
-      comments: {
-        Row: {
-          content: string
-          created_at: string | null
-          feed_id: string | null
           id: string
+          title: string
+          content: string | null
+          audio_url: string | null
+          image_url: string | null
           user_id: string | null
+          created_at: string
         }
         Insert: {
-          content: string
-          created_at?: string | null
-          feed_id?: string | null
           id?: string
+          title: string
+          content?: string | null
+          audio_url?: string | null
+          image_url?: string | null
           user_id?: string | null
+          created_at?: string
         }
         Update: {
-          content?: string
-          created_at?: string | null
-          feed_id?: string | null
           id?: string
+          title?: string
+          content?: string | null
+          audio_url?: string | null
+          image_url?: string | null
           user_id?: string | null
+          created_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "comments_feed_id_fkey"
-            columns: ["feed_id"]
+            foreignKeyName: "posts_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "feeds"
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      comments: {
+        Row: {
+          id: string
+          content: string
+          post_id: string
+          user_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          content: string
+          post_id: string
+          user_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          content?: string
+          post_id?: string
+          user_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
           {
@@ -60,96 +83,81 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
-      expenses: {
+      likes: {
         Row: {
-          amount: number | null
-          date: string
-          description: string | null
           id: string
-          item: string | null
+          post_id: string
+          user_id: string
+          is_dislike: boolean
+          created_at: string
         }
         Insert: {
-          amount?: number | null
-          date: string
-          description?: string | null
           id?: string
-          item?: string | null
+          post_id: string
+          user_id: string
+          is_dislike?: boolean
+          created_at?: string
         }
         Update: {
-          amount?: number | null
-          date?: string
-          description?: string | null
           id?: string
-          item?: string | null
+          post_id?: string
+          user_id?: string
+          is_dislike?: boolean
+          created_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
-      feeds: {
+      recordings: {
         Row: {
-          content: string | null
-          created_at: string | null
           id: string
           title: string
+          audio_data: string | null
+          video_id: string | null
           user_id: string | null
+          created_at: string
         }
         Insert: {
-          content?: string | null
-          created_at?: string | null
           id?: string
           title: string
+          audio_data?: string | null
+          video_id?: string | null
           user_id?: string | null
+          created_at?: string
         }
         Update: {
-          content?: string | null
-          created_at?: string | null
           id?: string
           title?: string
+          audio_data?: string | null
+          video_id?: string | null
           user_id?: string | null
+          created_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "feeds_user_id_fkey"
+            foreignKeyName: "recordings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
-          },
-        ]
-      }
-      upvotes: {
-        Row: {
-          feed_id: string
-          id: string
-          user_id: string | null
-        }
-        Insert: {
-          feed_id: string
-          id?: string
-          user_id?: string | null
-        }
-        Update: {
-          feed_id?: string
-          id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "upvotes_feed_id_fkey"
-            columns: ["feed_id"]
-            isOneToOne: false
-            referencedRelation: "feeds"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "upvotes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
+          }
         ]
       }
       users: {

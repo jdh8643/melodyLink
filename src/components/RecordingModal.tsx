@@ -74,6 +74,20 @@ export function RecordingModal({ isOpen, onClose, onSave }: RecordingModalProps)
             onChange={(e) => setTitle(e.target.value)}
             className="bg-gray-800 border-gray-700 text-white"
           />
+          {audioUrl && (
+            <div className="w-full bg-gray-700/50 rounded-lg p-3">
+              <audio 
+                src={audioUrl} 
+                controls 
+                className="w-full" 
+                controlsList="nodownload"
+                onError={(e) => {
+                  console.error("Audio playback error:", e);
+                  toast.error("오디오 재생에 실패했습니다.");
+                }}
+              />
+            </div>
+          )}
           <div className="flex justify-center gap-4">
             {!isRecording ? (
               <Button
@@ -94,29 +108,25 @@ export function RecordingModal({ isOpen, onClose, onSave }: RecordingModalProps)
                 녹음 중지
               </Button>
             )}
-            <div className="relative">
-              <Input
-                type="file"
-                accept="audio/*"
-                onChange={handleFileSelect}
-                className="hidden"
-                ref={fileInputRef}
-                disabled={isRecording}
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                variant="outline"
-                disabled={isRecording}
-                className="border-gray-700 text-white hover:bg-gray-700"
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                파일 선택
-              </Button>
-            </div>
+            <input
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="outline"
+              className="border-purple-500/30 hover:border-purple-400 text-purple-400 hover:text-purple-300"
+              disabled={isRecording}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              파일 업로드
+            </Button>
           </div>
           {audioUrl && (
             <div className="space-y-4">
-              <audio src={audioUrl} controls className="w-full" />
               <Button
                 onClick={handleSave}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white"

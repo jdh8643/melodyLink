@@ -217,7 +217,10 @@ const Posts = () => {
     };
 
     const updatedRecordings = [newRecording, ...recordings];
-    localStorage.setItem(RECORDINGS_STORAGE_KEY, JSON.stringify(updatedRecordings));
+    localStorage.setItem(
+      RECORDINGS_STORAGE_KEY,
+      JSON.stringify(updatedRecordings)
+    );
     setRecordings(updatedRecordings);
     toast.success("녹음이 저장되었습니다.");
   };
@@ -244,8 +247,7 @@ const Posts = () => {
               onClick={() => setIsRecordingModalOpen(true)}
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
-              <Mic className="w-4 h-4 mr-2" />
-              새 녹음
+              <Mic className="w-4 h-4 mr-2" />새 녹음
             </Button>
             <Button
               onClick={() => navigate("/")}

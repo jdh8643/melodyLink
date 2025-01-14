@@ -1,6 +1,50 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = 'https://jxwgdmhxkgwpkqzwkxpv.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp4d2dkbWh4a2d3cGtxendreHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDQ3OTg1ODAsImV4cCI6MjAyMDM3NDU4MH0.Wy4GBNGYMvHcYo1Mfbz__7qG-v1kTJPEy-aFGpbNO3c'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("Missing Supabase configuration");
+}
+
+// 싱글톤 패턴으로 Supabase 클라이언트 생성
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
+export const supabase = (() => {
+  if (supabaseInstance) return supabaseInstance;
+
+  supabaseInstance = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      storageKey: "melody-link-auth-token",
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+    global: {
+      fetch:
+        typeof window !== "undefined" ? window.fetch.bind(window) : undefined,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  });
+
+  return supabaseInstance;
+})();
+
+// 로그인 함수 확인
+const signIn = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) throw error;
+  return data;
+};
+
+// 로그아웃 함수 확인
+const signOut = async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+};

@@ -22,6 +22,7 @@ import Video from "./pages/Video";
 import Posts from "./pages/Posts";
 import Cover from "./pages/Cover"; // Import Cover component
 import Popular from "./pages/Popular"; // 인기 순위 페이지 추가
+import Board from "./pages/Board"; // Import Board component
 
 
 // React Query 클라이언트 인스턴스 생성
@@ -96,6 +97,14 @@ const Navigation = () => {
                 >
                   인기 순위
                 </Link>
+                <Link
+                  to="/board"
+                  className={`text-white hover:text-purple-400 transition-colors ${
+                    location.pathname === "/board" ? "text-purple-400" : ""
+                  }`}
+                >
+                  게시판
+                </Link>
               </div>
               <div className="flex items-center gap-4">
                 {session ? (
@@ -159,6 +168,8 @@ function App() {
             <Route path="/video/:videoId" element={<Video />} />
             <Route path="/posts" element={<Posts />} />
             <Route path="/popular" element={<Popular />} />{" "}
+            {/* 새로운 라우트 추가 */}
+            <Route path="/board" element={<Board />} />{" "}
             {/* 새로운 라우트 추가 */}
           </Routes>
           <NavigationWrapper />
