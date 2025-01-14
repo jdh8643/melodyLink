@@ -1,121 +1,116 @@
-import { useState } from "react";
+// React와 라우팅 관련 훅
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { searchVideos, type YouTubeVideo } from "../utils/youtube";
+// YouTube 관련 유틸리티와 타입
+import {
+  searchVideos,
+  fetchGenreVideos,
+  type YouTubeVideo,
+} from "../utils/youtube";
+// UI 컴포넌트들
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+// 아이콘
 import { Music4, ChartBar } from "lucide-react";
+// 이미지 처리 유틸리티
 import { getPlaceholderImage } from "../utils/imageHandling";
 
-// 인기 뮤직비디오 데이터
-const popularSongs = {
-  kpop: [
-    {
-      id: "D8VEhcPeSlw",
-      title: "SEVENTEEN (세븐틴) - F*ck My Life",
-      artist: "SEVENTEEN",
-      songNumber: "MV-001",
-      thumbnail: "https://i.ytimg.com/vi/D8VEhcPeSlw/maxresdefault.jpg",
-    },
-    {
-      id: "UBURTj20HXI",
-      title: "Red Velvet - Chill Kill",
-      artist: "Red Velvet",
-      songNumber: "MV-002",
-      thumbnail: "https://i.ytimg.com/vi/UBURTj20HXI/maxresdefault.jpg",
-    },
-  ],
-  hiphop: [
-    {
-      id: "5jXrUNTqrwY",
-      title: "Agust D - People Pt.2 (feat. IU)",
-      artist: "Agust D, IU",
-      songNumber: "MV-003",
-      thumbnail: "https://i.ytimg.com/vi/5jXrUNTqrwY/maxresdefault.jpg",
-    },
-    {
-      id: "ArmDp-zijuc",
-      title: "염따 - Mint Chocolate (feat. 박재범)",
-      artist: "염따, 박재범",
-      songNumber: "MV-004",
-      thumbnail: "https://i.ytimg.com/vi/ArmDp-zijuc/maxresdefault.jpg",
-    },
-  ],
-  indie: [
-    {
-      id: "pC6tPEaAiYU",
-      title: "아이유(IU) - Love wins all",
-      artist: "IU",
-      songNumber: "MV-005",
-      thumbnail: "https://i.ytimg.com/vi/pC6tPEaAiYU/maxresdefault.jpg",
-    },
-    {
-      id: "6H1e8I1kMEU",
-      title: "10CM - 부동의 첫사랑",
-      artist: "10CM",
-      songNumber: "MV-006",
-      thumbnail: "https://i.ytimg.com/vi/6H1e8I1kMEU/maxresdefault.jpg",
-    },
-  ],
-};
+// 메인 페이지 컴포넌트
+const Index = () => {
+  // 검색어 상태 관리
+  const [searchQuery, setSearchQuery] = useState("");
+  // 검색 결과 상태 관리
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  // 장르별 비디오 상태 관리
+  const [genreVideos, setGenreVideos] = useState<
+    Record<string, YouTubeVideo[]>
+  >({
+    kpop: [],
+    hiphop: [],
+    indie: [],
+  });
+  // 페이지 이동 함수
+  const navigate = useNavigate();
 
-const GenreSection = ({
-  title,
-  songs,
-  navigate,
-  genre,
-}: {
-  title: string;
-  songs: YouTubeVideo[];
-  navigate: (path: string) => void;
-  genre: string;
-}) => {
-  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  // 컴포넌트 마운트 시 장르별 비디오 로드
+  useEffect(() => {
+    const loadGenreVideos = async () => {
+      const genres = ["kpop", "hiphop", "indie"];
+      const genreData: Record<string, YouTubeVideo[]> = {};
 
-  const handleImageError = (songId: string) => {
-    setFailedImages((prev) => ({ ...prev, [songId]: true }));
+      for (const genre of genres) {
+        const videos = await fetchGenreVideos(genre);
+        genreData[genre] = videos;
+      }
+
+      setGenreVideos(genreData);
+    };
+
+    loadGenreVideos();
+  }, []);
+
+  // 검색 핸들러
+  const handleSearch = async () => {
+    if (searchQuery.trim()) {
+      try {
+        const results = await searchVideos(searchQuery);
+        setVideos(results);
+      } catch (error) {
+        console.error("검색 오류:", error);
+        setVideos([]);
+      }
+    }
   };
 
-  return (
+  // 엔터 키 입력 시 검색 핸들러 호출
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  // 장르별 섹션 렌더링
+  const GenreSection = ({
+    title,
+    videos,
+    genre,
+  }: {
+    title: string;
+    videos: YouTubeVideo[];
+    genre: string;
+  }) => (
     <div className="mb-8">
       <div className="flex items-center gap-2 mb-4">
         <ChartBar className="w-5 h-5 text-purple-400" />
         <h2 className="text-xl font-semibold text-white">{title}</h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {songs.map((song) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {videos.map((video) => (
           <Card
-            key={song.id}
+            key={video.id}
             className="bg-gray-800/50 border-purple-500/30 hover:border-purple-400 transition-colors cursor-pointer"
-            onClick={() => navigate(`/video/${song.id}`)}
+            onClick={() => navigate(`/video/${video.id}`)}
           >
             <div className="flex items-start p-4 gap-4">
               <div className="w-24 flex-shrink-0">
                 <img
-                  src={
-                    failedImages[song.id]
-                      ? getPlaceholderImage(genre)
-                      : song.thumbnail
-                  }
-                  alt={song.title}
+                  src={video.thumbnail}
+                  alt={video.title}
                   className="w-full aspect-video object-cover rounded-lg"
-                  onError={() => handleImageError(song.id)}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = getPlaceholderImage(genre);
+                  }}
                 />
               </div>
               <div className="flex-grow">
-                <div className="flex items-center gap-2 mb-2">
-                  {song.songNumber && (
-                    <span className="bg-purple-600/80 px-2 py-1 rounded text-sm">
-                      {song.songNumber}
-                    </span>
-                  )}
-                  <h3 className="text-lg font-semibold text-white">
-                    {song.title}
-                  </h3>
-                </div>
-                {song.artist && (
-                  <p className="text-purple-300 text-sm">
-                    아티스트: {song.artist}
+                <h3 className="text-lg font-semibold text-white line-clamp-2">
+                  {video.title}
+                </h3>
+                {video.channelTitle && (
+                  <p className="text-purple-300 text-sm mt-1">
+                    {video.channelTitle}
                   </p>
                 )}
               </div>
@@ -125,25 +120,6 @@ const GenreSection = ({
       </div>
     </div>
   );
-};
-
-const Index = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
-  const navigate = useNavigate();
-
-  const handleSearch = async () => {
-    if (searchQuery.trim()) {
-      const results = await searchVideos(searchQuery);
-      setVideos(results);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-purple-900 text-white p-8">
@@ -163,7 +139,7 @@ const Index = () => {
             placeholder="가수 또는 노래 제목을 입력하세요..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             className="flex-1 bg-gray-800/50 border-purple-500/30 focus:border-purple-400"
           />
           <Button
@@ -174,65 +150,58 @@ const Index = () => {
           </Button>
         </div>
 
-        {searchQuery ? (
-          <div className="grid grid-cols-1 gap-4">
-            {videos.map((video) => (
-              <Card
-                key={video.id}
-                className="bg-gray-800/50 border-purple-500/30 hover:border-purple-400 transition-colors cursor-pointer"
-                onClick={() => navigate(`/video/${video.id}`)}
-              >
-                <div className="flex items-start p-4 gap-4">
-                  <div className="w-48 flex-shrink-0">
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-full aspect-video object-cover rounded-lg"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = getPlaceholderImage("kpop");
-                      }}
-                    />
-                  </div>
-                  <div className="flex-grow">
-                    <div className="flex items-center gap-2 mb-2">
-                      {video.songNumber && (
-                        <span className="bg-purple-600/80 px-2 py-1 rounded text-sm">
-                          {video.songNumber}
-                        </span>
-                      )}
-                      <h3 className="text-lg font-semibold text-white">
+        {videos.length > 0 ? (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">검색 결과</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {videos.map((video) => (
+                <Card
+                  key={video.id}
+                  className="bg-gray-800/50 border-purple-500/30 hover:border-purple-400 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/video/${video.id}`)}
+                >
+                  <div className="flex items-start p-4 gap-4">
+                    <div className="w-24 flex-shrink-0">
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full aspect-video object-cover rounded-lg"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = getPlaceholderImage("kpop");
+                        }}
+                      />
+                    </div>
+                    <div className="flex-grow">
+                      <h3 className="text-lg font-semibold text-white line-clamp-2">
                         {video.title}
                       </h3>
+                      {video.channelTitle && (
+                        <p className="text-purple-300 text-sm mt-1">
+                          {video.channelTitle}
+                        </p>
+                      )}
                     </div>
-                    {video.artist && (
-                      <p className="text-purple-300 text-sm">
-                        아티스트: {video.artist}
-                      </p>
-                    )}
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+            </div>
           </div>
         ) : (
           <>
             <GenreSection
-              title="K-POP 인기차트"
-              songs={popularSongs.kpop}
-              navigate={navigate}
+              title="K-POP"
+              videos={genreVideos.kpop}
               genre="kpop"
             />
             <GenreSection
-              title="힙합 인기차트"
-              songs={popularSongs.hiphop}
-              navigate={navigate}
+              title="Hip Hop"
+              videos={genreVideos.hiphop}
               genre="hiphop"
             />
             <GenreSection
-              title="인디 인기차트"
-              songs={popularSongs.indie}
-              navigate={navigate}
+              title="Indie"
+              videos={genreVideos.indie}
               genre="indie"
             />
           </>
